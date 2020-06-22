@@ -92,17 +92,22 @@ void Client::on_connectButton_clicked()
         str_name = ui->lineEdit_name->text();
         if(str_name.length()>10)
         {
-            QMessageBox::about(NULL, "错误", "昵称最多10个字符！");
+            QMessageBox::critical(NULL, "错误", "昵称最多10个字符！");
             return;
         }
         else if(str_name.length()==0)
         {
             str_name = "游客";
-            QMessageBox::about(NULL, "警告", "你将以游客的身份进入大厅！");
+            QMessageBox::warning(NULL, "警告", "你将以游客的身份进入大厅！");
         }
         else if(str_name.contains(":"))
         {
-            QMessageBox::about(NULL, "错误", "昵称中不允许包含\":\"！");
+            QMessageBox::critical(NULL, "错误", "昵称中不允许包含\":\"！");
+            return;
+        }
+        else if(str_name=="GOD")
+        {
+            QMessageBox::critical(NULL, "放肆", "这里只能有一个神！");
             return;
         }
 

@@ -4,7 +4,8 @@
 #include <QMainWindow>
 #include <QtNetwork>
 #include <QMessageBox>
-
+#include <vector>
+using namespace std;
 //#include <QDebug>
 //#include <QDateTime>
 //#include <QSqlError>
@@ -28,7 +29,7 @@ private slots:
 //    void on_stopButton_clicked();
     void acceptConnection();
     void sendMessage();
-    void displayError(QAbstractSocket::SocketError);
+//    void displayError(QAbstractSocket::SocketError);
     void receiveMessage();
 //    void saveMessage(QString , QString , QString);
 
@@ -36,7 +37,7 @@ private:
     Ui::Server *ui;
 
     QTcpServer *tcpServer;
-    QTcpSocket *tcpSocketConnection;
+    vector<QTcpSocket*> SocketArr;
 
 
 };
