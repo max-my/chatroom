@@ -28,15 +28,17 @@ Server::~Server()
 // 连接信号
 void Server::acceptConnection()
 {
+    Client client;
     // 调用nextPendingConnection获取连接进来的socket
-    QTcpSocket* tcpSocket = tcpServer->nextPendingConnection();
-    // 根据不同的信号将tcpSocketConnection和相关函数关联
-//    connect(tcpSocket,SIGNAL(disconnected()),this,SLOT(deleteLater()));
-//    connect(tcpSocket,SIGNAL(error(QAbstractSocket::SocketError)),this,SLOT(displayError(QAbstractSocket::SocketError)));
+    client.tcpSocket = tcpServer->nextPendingConnection();
+
     // 接受Client发来的消息，readyRead()准备读取信号，异步读取数据。
-    connect(tcpSocket, SIGNAL(readyRead()), this, SLOT(receiveMessage()));
+    connect(client.tcpSocket, SIGNAL(readyRead()), this, SLOT(receiveMessage()));
+
+    // 把其余客户端昵称发送至新客户端
+
     // 把套接字加入vector
-    SocketArr.push_back(tcpSocket);
+    ClientArr.push_back(client);
 }
 
 
@@ -65,10 +67,10 @@ void Server::sendMessage()
     ui->textEdit_log->append(temp_str);
 
     QString str_msg = "GOD:" + temp_str;
-    for(int j=0; j<(int)(SocketArr.size()); j++)
+    for(int j=0; j<(int)(ClientArr.size()); j++)
     {
         // 将消息发送到客户端
-        SocketArr[j]->write(str_msg.toUtf8());
+        ClientArr[j].tcpSocket->write(str_msg.toUtf8());
     }
     // 将这条内容的有关信息存储到mysql。
 //    saveMessage(nowtime, "Server", str);
@@ -99,27 +101,35 @@ void Server::sendMessage()
 // 接收从Client发送来的消息。
 void Server::receiveMessage()
 {
-    for(int i=0; i<(int)(SocketArr.size()); i++)
+    for(int i=0; i<(int)(ClientArr.size()); i++)
     {
-        if(SocketArr[i]->bytesAvailable())
+        if(ClientArr[i].tcpSocket->bytesAvailable())
         {
+            // 使用readAll函数读取所有信息
+            QString temp_str = ClientArr[i].tcpSocket->readAll();
+
+            if(ClientArr[i].name=="")// 第一次接收客户端信息一定是客户昵称
+            {
+                ClientArr[i].name = temp_str;
+                return;
+            }
+
             QDateTime time = QDateTime::currentDateTime();
             QString nowtime = time.toString("yyyy-MM-dd hh:mm:ss");
-            // 使用readAll函数读取所有信息
-            QString temp_str = SocketArr[i]->readAll();
+
             int temp_pos = temp_str.indexOf(":");
             QString temp_name = temp_str.left(temp_pos);
             QString temp_msg = temp_str.mid(temp_pos+1);
 
             // 显示消息
             ui->textEdit_log->append(nowtime + "    " + temp_name);
-            ui->textEdit_log->append("    " + temp_msg);
+            ui->textEdit_log->append(temp_msg);
 
-            for(int j=0; j<(int)(SocketArr.size()); j++)
+            for(int j=0; j<(int)(ClientArr.size()); j++)
             {
                 // 将消息发送到其他客户端
                 if(j != i)
-                    SocketArr[j]->write(temp_str.toUtf8());
+                    ClientArr[j].tcpSocket->write(temp_str.toUtf8());
             }
         }
     }

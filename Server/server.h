@@ -39,7 +39,14 @@ private:
     Ui::Server *ui;
 
     QTcpServer *tcpServer;
-    vector<QTcpSocket*> SocketArr;
+
+    struct Client
+    {
+        QTcpSocket* tcpSocket;
+        QString name;
+    };
+
+    vector<Client> ClientArr;
 
 
 };

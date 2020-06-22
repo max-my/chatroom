@@ -117,6 +117,10 @@ void Client::on_connectButton_clicked()
         {
             is_connect = true;
             ui->pbConnect->setText("退出");
+
+            // 第一次连接发送客户昵称
+            tcpSocket->write(str_name.toUtf8());
+
             QMessageBox::about(NULL, "Connection", "登录成功！");
         }
         else
@@ -169,7 +173,7 @@ void Client::receiveMessage()
 
 
     ui->textEdit_log->append(nowtime + "    " + temp_name);
-    ui->textEdit_log->append("    " + temp_msg);
+    ui->textEdit_log->append(temp_msg);
 }
 
 // 将信息存储到数据库
