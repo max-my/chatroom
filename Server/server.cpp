@@ -63,7 +63,9 @@ void Server::sendMessage()
     QString nowtime = time.toString("yyyy-MM-dd hh:mm:ss");
 
     //显示在Server的消息记录里
-    ui->textEdit_log->append(nowtime + "    GOD:");
+
+    ui->textEdit_log->append("<b>" + nowtime + " <font color=red>GOD</font></b>");
+    ui->textEdit_log->setAlignment(Qt::AlignRight);
     ui->textEdit_log->append(temp_str);
 
     QString str_msg = "GOD:" + temp_str;
@@ -122,7 +124,8 @@ void Server::receiveMessage()
             QString temp_msg = temp_str.mid(temp_pos+1);
 
             // 显示消息
-            ui->textEdit_log->append(nowtime + "    " + temp_name);
+            ui->textEdit_log->append("<b>" + nowtime + " <font color=blue>" + temp_name + "</font></b>");
+            ui->textEdit_log->setAlignment(Qt::AlignLeft);
             ui->textEdit_log->append(temp_msg);
 
             for(int j=0; j<(int)(ClientArr.size()); j++)

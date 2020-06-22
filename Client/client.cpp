@@ -152,7 +152,9 @@ void Client::sendMessage()
         QDateTime time = QDateTime::currentDateTime();
         QString nowtime = time.toString("yyyy-MM-dd hh:mm:ss");
 
-        ui->textEdit_log->append(nowtime + "    " + str_name);
+
+        ui->textEdit_log->append("<b>" + nowtime + " <font color=red>" + str_name + "</font></b>");
+        ui->textEdit_log->setAlignment(Qt::AlignRight);// 奇怕！这一行会控制上下两行的对齐方式
         ui->textEdit_log->append(temp_str);
 
         QString str_msg = str_name + ":" + temp_str;
@@ -172,7 +174,9 @@ void Client::receiveMessage()
     QString temp_msg = temp_str.mid(temp_pos+1);
 
 
-    ui->textEdit_log->append(nowtime + "    " + temp_name);
+
+    ui->textEdit_log->append("<b>" + nowtime + " <font color=blue>" + temp_name + "</font></b>");
+    ui->textEdit_log->setAlignment(Qt::AlignLeft);
     ui->textEdit_log->append(temp_msg);
 }
 
