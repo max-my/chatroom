@@ -40,16 +40,6 @@
        <string>拍TA</string>
       </property>
      </widget>
-     <widget class="QTableWidget" name="tableWidget">
-      <property name="geometry">
-       <rect>
-        <x>470</x>
-        <y>80</y>
-        <width>171</width>
-        <height>341</height>
-       </rect>
-      </property>
-     </widget>
      <widget class="QTextEdit" name="textEdit_input">
       <property name="geometry">
        <rect>
@@ -86,7 +76,7 @@
        <bool>true</bool>
       </property>
      </widget>
-     <widget class="QLabel" name="label">
+     <widget class="QLabel" name="label_HIUP">
       <property name="geometry">
        <rect>
         <x>150</x>
@@ -102,25 +92,87 @@
        <enum>Qt::RichText</enum>
       </property>
      </widget>
-     <zorder>tableWidget</zorder>
+     <widget class="QListWidget" name="listWidget_MB">
+      <property name="geometry">
+       <rect>
+        <x>460</x>
+        <y>80</y>
+        <width>191</width>
+        <height>341</height>
+       </rect>
+      </property>
+     </widget>
+     <zorder>listWidget_MB</zorder>
      <zorder>pbPaita</zorder>
      <zorder>textEdit_input</zorder>
      <zorder>pbSend</zorder>
      <zorder>textEdit_log</zorder>
-     <zorder>label</zorder>
+     <zorder>label_HIUP</zorder>
     </widget>
     <widget class="QWidget" name="stackedWidgetPage2">
      <widget class="QPushButton" name="pbReturn">
       <property name="geometry">
        <rect>
-        <x>530</x>
-        <y>380</y>
+        <x>550</x>
+        <y>20</y>
         <width>89</width>
         <height>25</height>
        </rect>
       </property>
       <property name="text">
        <string>返回大厅</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_Name">
+      <property name="geometry">
+       <rect>
+        <x>250</x>
+        <y>20</y>
+        <width>151</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:20pt; font-weight:600;&quot;&gt;游客&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+      <property name="textFormat">
+       <enum>Qt::RichText</enum>
+      </property>
+     </widget>
+     <widget class="QTextEdit" name="textEdit_log2">
+      <property name="geometry">
+       <rect>
+        <x>40</x>
+        <y>70</y>
+        <width>601</width>
+        <height>241</height>
+       </rect>
+      </property>
+      <property name="readOnly">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QTextEdit" name="textEdit_input2">
+      <property name="geometry">
+       <rect>
+        <x>40</x>
+        <y>329</y>
+        <width>601</width>
+        <height>91</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="pbSend2">
+      <property name="geometry">
+       <rect>
+        <x>550</x>
+        <y>390</y>
+        <width>89</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>发送</string>
       </property>
      </widget>
     </widget>

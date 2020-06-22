@@ -100,9 +100,9 @@ void Client::on_connectButton_clicked()
             str_name = "游客";
             QMessageBox::warning(NULL, "警告", "你将以游客的身份进入大厅！");
         }
-        else if(str_name.contains(":"))
+        else if(str_name.contains(":") || str_name.contains("@") || str_name.contains("*") || str_name.contains("%"))
         {
-            QMessageBox::critical(NULL, "错误", "昵称中不允许包含\":\"！");
+            QMessageBox::critical(NULL, "错误", "昵称中不允许包含\":@*%\"！");
             return;
         }
         else if(str_name=="GOD")
@@ -170,11 +170,69 @@ void Client::sendMessage()
 void Client::receiveMessage()
 {
     QString temp_str = tcpSocket->readAll();
-    QDateTime time = QDateTime::currentDateTime();
-    QString nowtime = time.toString("yyyy-MM-dd hh:mm:ss");
     int temp_pos = temp_str.indexOf(":");
     QString temp_name = temp_str.left(temp_pos);
     QString temp_msg = temp_str.mid(temp_pos+1);
+
+    if(temp_name == "GOD")//服务器发来的消息在notice显示
+    {
+        ui->textEdit_notice->append("<b><font color=red>" + temp_str + "</font></b>");
+        return;
+    }
+    else if (temp_str.contains("*"))// 添加用户
+    {
+        // 更新成员列表
+        temp_str = temp_str.left(temp_str.indexOf("*"));
+        str_names.push_back(temp_str);
+        update_member_list();
+
+        if(!get_names)//处理第一个用户特殊情况
+            get_names = true;
+
+        return;
+    }
+    else if (temp_str.contains("%"))// 删除用户
+    {
+        // 更新成员列表
+        temp_str = temp_str.left(temp_str.indexOf("%"));
+        for(int i=0; i<(int)str_names.size(); i++)
+        {
+            if(str_names[i] == temp_str)
+            {
+                str_names.erase(str_names.begin()+i);
+                break;
+            }
+        }
+        update_member_list();
+        return;
+    }
+    else if (temp_str.contains("@"))// 切换私聊
+    {
+        // 询问接不接受私聊
+        return;
+    }
+    else if(!get_names)// 第一次接收，存储已登录的用户信息// 位置必须在添加用户后！
+    {
+        int temp_num = temp_str.count(":");
+        for (int i=0; i<temp_num; i++)
+        {
+            // 取出一个
+            int temp_pos = temp_str.indexOf(":");
+            QString temp_name = temp_str.left(temp_pos);
+            // 压入一个
+            str_names.push_back(temp_name);
+            // 截断
+            temp_str = temp_str.mid(temp_pos+1);
+        }
+        update_member_list();
+        get_names = true;
+        return;
+    }
+
+
+    QDateTime time = QDateTime::currentDateTime();
+    QString nowtime = time.toString("yyyy-MM-dd hh:mm:ss");
+
 
     ui->textEdit_log->append("<b>" + nowtime + " <font color=blue>" + temp_name + "</font></b>");
     ui->textEdit_log->setAlignment(Qt::AlignLeft);
@@ -257,5 +315,15 @@ void Client::keyReleaseEvent(QKeyEvent *event)
         {
             sendMessage();
         }
+    }
+}
+
+// 更新用户列表
+void Client::update_member_list()
+{
+    ui->listWidget_MB->clear();
+    for(int i=0; i<(int)str_names.size(); i++)
+    {
+        ui->listWidget_MB->addItem(str_names[i]);
     }
 }

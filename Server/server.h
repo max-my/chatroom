@@ -47,7 +47,7 @@ private:
     };
 
     vector<Client> ClientArr;
-
+    void update_member_list();// 更新用户列表
 
 };
 #endif // SERVER_H

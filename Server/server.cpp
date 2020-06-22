@@ -35,8 +35,16 @@ void Server::acceptConnection()
     // 接受Client发来的消息，readyRead()准备读取信号，异步读取数据。
     connect(client.tcpSocket, SIGNAL(readyRead()), this, SLOT(receiveMessage()));
 
-    // 把其余客户端昵称发送至新客户端
-
+    // 把其他人昵称发送至新用户
+    QString temp_names;
+    for (int i=0; i<(int)(ClientArr.size()); i++)
+    {
+        temp_names += ClientArr[i].name + ":";
+        if(i == (int)ClientArr.size() - 1)
+        {
+            client.tcpSocket->write(temp_names.toUtf8());
+        }
+    }
     // 把套接字加入vector
     ClientArr.push_back(client);
 }
@@ -116,6 +124,15 @@ void Server::receiveMessage()
             if(ClientArr[i].name=="")// 第一次接收客户端信息一定是客户昵称
             {
                 ClientArr[i].name = temp_str;
+                update_member_list();
+
+                // 把该用户昵称发给其他用户
+                temp_str = temp_str + "*";
+                for(int j=0; j<(int)(ClientArr.size()); j++)
+                {
+                    if(j != i)
+                        ClientArr[j].tcpSocket->write(temp_str.toUtf8());
+                }
                 return;
             }
 
@@ -157,5 +174,15 @@ void Server::keyReleaseEvent(QKeyEvent *event)
         {
             sendMessage();
         }
+    }
+}
+
+// 更新用户列表
+void Server::update_member_list()
+{
+    ui->listWidget_MB->clear();
+    for(int i=0; i<(int)ClientArr.size(); i++)
+    {
+        ui->listWidget_MB->addItem(ClientArr[i].name);
     }
 }
