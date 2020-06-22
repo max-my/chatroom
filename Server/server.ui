@@ -85,7 +85,7 @@
      <enum>Qt::RichText</enum>
     </property>
    </widget>
-   <widget class="QListWidget" name="listWidget">
+   <widget class="QListWidget" name="listWidget_MB">
     <property name="geometry">
      <rect>
       <x>400</x>
@@ -113,7 +113,7 @@
    <zorder>textEdit_log</zorder>
    <zorder>pbSend</zorder>
    <zorder>label_MB</zorder>
-   <zorder>listWidget</zorder>
+   <zorder>listWidget_MB</zorder>
    <zorder>pushButton_Fuckoff</zorder>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
