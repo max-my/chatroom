@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QtNetwork>
 #include <QMessageBox>
+#include <QKeyEvent>
 #include <vector>
 using namespace std;
 //#include <QDebug>
@@ -32,6 +33,7 @@ private slots:
 //    void displayError(QAbstractSocket::SocketError);
     void receiveMessage();
 //    void saveMessage(QString , QString , QString);
+    void keyReleaseEvent(QKeyEvent *event);
 
 private:
     Ui::Server *ui;

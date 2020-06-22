@@ -134,15 +134,27 @@ void Client::on_connectButton_clicked()
 // 发送信息
 void Client::sendMessage()
 {
-    QString temp_str = ui->textEdit_input->toPlainText();
-    QDateTime time = QDateTime::currentDateTime();
-    QString nowtime = time.toString("yyyy-MM-dd hh:mm:ss");
-    ui->textEdit_log->append(nowtime + "    " + str_name);
-    ui->textEdit_log->append("    " + temp_str);
+    if(!is_connect)
+    {
+        QMessageBox::critical(NULL, "错误", "请先连接服务器");
+        return;
+    }
+    else
+    {
+        QString temp_str = ui->textEdit_input->toPlainText();
+        ui->textEdit_input->clear();
+        ui->textEdit_input->setFocus();
 
-    QString str_msg = str_name + ":" + temp_str;
-    tcpSocket->write(str_msg.toUtf8()); //toLatin1
-//    saveMessage(nowtime, "Client", str);
+        QDateTime time = QDateTime::currentDateTime();
+        QString nowtime = time.toString("yyyy-MM-dd hh:mm:ss");
+
+        ui->textEdit_log->append(nowtime + "    " + str_name);
+        ui->textEdit_log->append(temp_str);
+
+        QString str_msg = str_name + ":" + temp_str;
+        tcpSocket->write(str_msg.toUtf8()); //toLatin1
+        //    saveMessage(nowtime, "Client", str);
+    }
 }
 
 // 接收Server发来的消息，并显示到消息记录框里。
@@ -224,4 +236,17 @@ void Client::on_pbReturn_clicked()
 {
     // 返回大厅页面
     ui->stackedWidget->setCurrentIndex(0);
+}
+
+
+// 快捷键
+void Client::keyReleaseEvent(QKeyEvent *event)
+{
+    if(ui->textEdit_input->hasFocus())
+    {
+        if (event->key() == Qt::Key_Enter || event->key() == Qt::Key_Return)
+        {
+            sendMessage();
+        }
+    }
 }

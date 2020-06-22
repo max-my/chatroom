@@ -7,6 +7,7 @@ Server::Server(QWidget *parent)
 {
     ui->setupUi(this);
 
+
     tcpServer = new QTcpServer();
     if (!tcpServer->listen(QHostAddress::Any, 7777)) {
             qDebug() << tcpServer->errorString();
@@ -52,13 +53,16 @@ void Server::sendMessage()
 {
     //获取 输入框 里所输入的信息。
     QString temp_str = ui->textEdit_input->toPlainText();
+    ui->textEdit_input->clear();
+    ui->textEdit_input->setFocus();
+
     //获取当前时间
     QDateTime time = QDateTime::currentDateTime();
     QString nowtime = time.toString("yyyy-MM-dd hh:mm:ss");
 
     //显示在Server的消息记录里
     ui->textEdit_log->append(nowtime + "    GOD:");
-    ui->textEdit_log->append("    " + temp_str);
+    ui->textEdit_log->append(temp_str);
 
     QString str_msg = "GOD:" + temp_str;
     for(int j=0; j<(int)(SocketArr.size()); j++)
@@ -127,3 +131,15 @@ void Server::receiveMessage()
 //{
 //     qDebug() << tcpSocketConnection->errorString();
 //}
+
+// 快捷键
+void Server::keyReleaseEvent(QKeyEvent *event)
+{
+    if(ui->textEdit_input->hasFocus())
+    {
+        if (event->key() == Qt::Key_Enter || event->key() == Qt::Key_Return)
+        {
+            sendMessage();
+        }
+    }
+}

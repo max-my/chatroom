@@ -4,7 +4,7 @@
 #include <QMainWindow>
 #include <QtNetwork>
 #include <QMessageBox>
-
+#include <QKeyEvent>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class Client; }
@@ -30,6 +30,8 @@ private slots:
     void on_pbPaita_clicked();
 
     void on_pbReturn_clicked();
+
+    void keyReleaseEvent(QKeyEvent *event);
 
 private:
     Ui::Client *ui;
