@@ -65,6 +65,9 @@
       <height>241</height>
      </rect>
     </property>
+    <property name="readOnly">
+     <bool>true</bool>
+    </property>
    </widget>
    <zorder>textEdit_input</zorder>
    <zorder>label</zorder>

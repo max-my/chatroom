@@ -121,7 +121,7 @@ void Client::on_connectButton_clicked()
             // 第一次连接发送客户昵称
             tcpSocket->write(str_name.toUtf8());
 
-            QMessageBox::about(NULL, "Connection", "登录成功！");
+            ui->textEdit_notice->append("登录成功！");
         }
         else
         {

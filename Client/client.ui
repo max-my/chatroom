@@ -82,6 +82,9 @@
         <height>231</height>
        </rect>
       </property>
+      <property name="readOnly">
+       <bool>true</bool>
+      </property>
      </widget>
      <widget class="QLabel" name="label">
       <property name="geometry">
@@ -143,6 +146,9 @@
       <width>391</width>
       <height>70</height>
      </rect>
+    </property>
+    <property name="readOnly">
+     <bool>true</bool>
     </property>
    </widget>
    <widget class="QLineEdit" name="lineEdit_name">
