@@ -25,6 +25,7 @@ private slots:
     void receiveMessage();
     void displayError(QAbstractSocket::SocketError);
     void sendMessage();
+    void sendPrivateMessage();
 //    bool check(QString ,QString );
 //    void on_logonbutton_clicked();
 //    void saveMessage(QString , QString , QString);
@@ -41,10 +42,16 @@ private:
     QTcpSocket *tcpSocket;
 
     bool is_connect;// 连接服务器标志
-    QString str_name;// 客户昵称
     bool get_names;// 获取其他客户信息标志
+    bool is_Pai_Others;// 私聊中
+    bool send_Pai_to_others;// 发起私聊
+
+    QString str_name;// 客户昵称
+    QString str_friend;// 私聊对象
+
     vector<QString> str_names;// 其他客户信息
 
     void update_member_list();// 更新用户列表
+    void handle_private_chat(QString str_msg);// 处理私聊
 };
 #endif // CLIENT_H

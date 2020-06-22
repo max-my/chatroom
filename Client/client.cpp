@@ -5,10 +5,15 @@ Client::Client(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::Client)
     , is_connect(false)
+    , get_names(false)
+    , is_Pai_Others(false)
+    , send_Pai_to_others(false)
 {
     ui->setupUi(this);
 
     ui->lineEdit_name->setPlaceholderText("请输入昵称");
+
+
 
     // ================通信相关=============== //
     tcpSocket = new QTcpSocket(this);
@@ -23,65 +28,13 @@ Client::Client(QWidget *parent)
     connect(tcpSocket, SIGNAL(readyRead()), this, SLOT(receiveMessage()));
     // 将发送按钮和sendMessage函数关联起来
     connect(ui->pbSend,SIGNAL(clicked(bool)),this,SLOT(sendMessage()));
+    connect(ui->pbSend2,SIGNAL(clicked(bool)),this,SLOT(sendPrivateMessage()));
 }
 
 Client::~Client()
 {
     delete ui;
 }
-
-//// 连接数据库，判断所输入的用户名和密码是否正确
-//bool Client::check(QString ID, QString PW)
-//{
-//    QSqlDatabase dataBase=QSqlDatabase::addDatabase("QMYSQL");
-//    dataBase.setHostName("localhost");
-//    dataBase.setUserName("vici");
-//    dataBase.setPassword("123456");
-//    dataBase.setDatabaseName("ly");
-//    dataBase.open();
-//    QSqlQuery showquery(dataBase);
-//    QString showsql=QString("select *from user;");
-//    showquery.exec(showsql);
-//    if(showquery.numRowsAffected() != 0)
-//    {
-//        while(showquery.next())
-//        {
-//            if(showquery.value(0).toString() == ID && showquery.value(1).toString() == PW)
-//                return true;
-//        }
-//    }
-//    return false;
-//}
-
-//// 登录按钮，登录信息正确则连接到服务器
-//void Client::on_connectButton_clicked()
-//{
-//    if(tcpSocket->state()!=QAbstractSocket::ConnectedState)
-//    {
-//        // 获取用户名和密码
-//        QString ID = ui->IDLineEdit->text();
-//        QString PW = ui->PWLineEdit->text();
-
-//        // 检查
-//        if(check(ID, PW))
-//        {
-//            tcpSocket->connectToHost("127.0.0.1", 7777);
-
-//            if(tcpSocket->waitForConnected(10000))
-//            {
-//                QMessageBox::about(NULL, "Connection", "登录成功！");
-//            }
-//            else
-//            {
-//                QMessageBox::about(NULL,"Connection","登录失败！");
-//            }
-//        }
-
-//    }
-//    else
-//        QMessageBox::information(NULL,"","已登录。");
-//}
-
 
 // 连接按钮
 void Client::on_connectButton_clicked()
@@ -186,6 +139,8 @@ void Client::receiveMessage()
         str_names.push_back(temp_str);
         update_member_list();
 
+        ui->textEdit_notice->append("<font color=blue><b>" + temp_str + "</b>开着跑车进入聊天室,快去拍Ta！</font>");
+
         if(!get_names)//处理第一个用户特殊情况
             get_names = true;
 
@@ -209,6 +164,7 @@ void Client::receiveMessage()
     else if (temp_str.contains("@"))// 切换私聊
     {
         // 询问接不接受私聊
+        handle_private_chat(temp_str);
         return;
     }
     else if(!get_names)// 第一次接收，存储已登录的用户信息// 位置必须在添加用户后！
@@ -237,6 +193,197 @@ void Client::receiveMessage()
     ui->textEdit_log->append("<b>" + nowtime + " <font color=blue>" + temp_name + "</font></b>");
     ui->textEdit_log->setAlignment(Qt::AlignLeft);
     ui->textEdit_log->append(temp_msg);
+}
+
+
+void Client::displayError(QAbstractSocket::SocketError)
+{
+    qDebug() << tcpSocket->errorString();
+}
+
+// 私聊按钮
+void Client::on_pbPaita_clicked()
+{
+    // 获取对象昵称
+    str_friend = ui->listWidget_MB->currentItem()->text();
+    QMessageBox::information(NULL, "提示", "请耐心等待"+str_friend+"同意");
+    // 切换到私聊页面
+    ui->label_Name->setText("<b>"+str_friend+"的小窗</b>");
+
+    ui->label_Name->setAlignment(Qt::AlignCenter);
+    QFont font;
+    font.setPointSize(20); // 设置字号
+    ui->label_Name->setFont(font);  // 设置字体
+
+    ui->textEdit_log2->clear();
+    ui->textEdit_log2->append("<b>" + str_friend + "正在赶来...</b>");
+
+    // 发送私聊请求
+    tcpSocket->write((str_friend+"@").toUtf8());
+    send_Pai_to_others = true;
+    ui->stackedWidget->setCurrentIndex(1);
+}
+
+// 返回大厅
+void Client::on_pbReturn_clicked()
+{
+    // 返回大厅页面
+    // 提示对方自己离开
+    if(is_Pai_Others)
+    {
+        if(QMessageBox::Yes == QMessageBox::question(this,QStringLiteral("注意"),QStringLiteral("返回大厅将断开私聊连接！"),QMessageBox::Yes | QMessageBox:: No))
+        {
+            //        qDebug()<<"yes";
+            tcpSocket->write((str_friend+"@#").toUtf8());
+            str_friend = "";
+            send_Pai_to_others = false;
+            is_Pai_Others = false;
+            // 返回大厅
+            ui->stackedWidget->setCurrentIndex(0);
+        }
+        else
+        {
+            //        qDebug()<<"no";
+            return;
+        }
+    }
+    else
+    {
+        // 返回大厅
+        ui->stackedWidget->setCurrentIndex(0);
+    }
+}
+
+// 快捷键
+void Client::keyReleaseEvent(QKeyEvent *event)
+{
+    if(ui->textEdit_input->hasFocus())
+    {
+        if (event->key() == Qt::Key_Enter || event->key() == Qt::Key_Return)
+        {
+            sendMessage();
+        }
+    }
+}
+
+// 更新用户列表
+void Client::update_member_list()
+{
+    ui->listWidget_MB->clear();
+    for(int i=0; i<(int)str_names.size(); i++)
+    {
+        ui->listWidget_MB->addItem(str_names[i]);
+    }
+}
+
+// 处理私聊
+void Client::handle_private_chat(QString str_msg)
+{
+    if(send_Pai_to_others && !is_Pai_Others)//我拍了别人
+    {
+        if(str_friend == str_msg.left(str_msg.indexOf("@")))//是我拍的人发来的
+        {
+            if("YES" == str_msg.mid(str_msg.indexOf("@")+1))//同意
+            {
+                ui->textEdit_log2->append("<b>" + str_friend + "大摇大摆的进来了</b>");
+                is_Pai_Others = true;
+            }
+            else//fuck
+            {
+                ui->textEdit_log2->append("<b>" + str_friend + "拒绝了你的邀请..bad bad</b>");
+                send_Pai_to_others = false;
+            }
+        }
+        else// 其他人发来的，直接拒绝，做一个专一的男人
+        {
+            tcpSocket->write((str_msg+"NO").toUtf8());
+        }
+        return;
+    }
+    else if(is_Pai_Others)// 正在互拍
+    {
+        int temp_pos = str_msg.indexOf("@");
+        QString temp_name = str_msg.left(temp_pos);
+        QString temp_msg = str_msg.mid(temp_pos+1);
+
+        if(temp_msg == "#")//对方离开了
+        {
+            ui->textEdit_log2->append("<b>" + str_friend + "已离开...</b>");
+            ui->textEdit_log2->setAlignment(Qt::AlignLeft);
+            str_friend = "";
+            send_Pai_to_others = false;
+            is_Pai_Others = false;
+            return;
+        }
+
+        QDateTime time = QDateTime::currentDateTime();
+        QString nowtime = time.toString("yyyy-MM-dd hh:mm:ss");
+
+        ui->textEdit_log2->append("<b>" + nowtime + " <font color=blue>" + temp_name + "</font></b>");
+        ui->textEdit_log2->setAlignment(Qt::AlignLeft);
+        ui->textEdit_log2->append(temp_msg);
+    }
+    else // 没有在拍，也没有拍人
+    {
+        QString temp_msg = str_msg.left(str_msg.indexOf("@")) + "想拍你";
+
+        if(QMessageBox::Yes == QMessageBox::question(this,"注意",temp_msg,QMessageBox::Yes | QMessageBox:: No))
+        {
+    //        qDebug()<<"yes";
+            str_friend = str_msg.left(str_msg.indexOf("@"));
+            tcpSocket->write((str_friend+"@YES").toUtf8());
+
+            // 切换到私聊页面
+            ui->label_Name->setText("<b>"+str_friend+"的小窗</b>");
+
+            ui->label_Name->setAlignment(Qt::AlignCenter);
+            QFont font;
+            font.setPointSize(20); // 设置字号
+            ui->label_Name->setFont(font);  // 设置字体
+
+            ui->textEdit_log2->clear();
+            ui->textEdit_log2->append("<b>快和" + str_friend + "打个招呼吧!</b>");
+
+            is_Pai_Others = true;
+            ui->stackedWidget->setCurrentIndex(1);
+        }
+        else
+        {
+    //        qDebug()<<"no";
+            tcpSocket->write((str_msg+"NO").toUtf8());
+            return;
+        }
+    }
+}
+
+
+void Client::sendPrivateMessage()
+{
+    if(!is_Pai_Others)//没人给拍不能发消息
+    {
+        QMessageBox::information(this,"注意","请返回大厅重新拍人");
+        ui->textEdit_input2->clear();
+        ui->pbReturn->setFocus();
+        return;
+    }
+    QString temp_str = ui->textEdit_input2->toPlainText();
+    if(temp_str=="")
+        return;
+
+    ui->textEdit_input2->clear();
+    ui->textEdit_input2->setFocus();
+
+    QDateTime time = QDateTime::currentDateTime();
+    QString nowtime = time.toString("yyyy-MM-dd hh:mm:ss");
+
+
+    ui->textEdit_log2->append("<b>" + nowtime + " <font color=red>" + str_name + "</font></b>");
+    ui->textEdit_log2->setAlignment(Qt::AlignRight);// 奇怕！这一行会控制上下两行的对齐方式
+    ui->textEdit_log2->append(temp_str);
+
+    QString str_msg = str_friend + "@" + temp_str;//中间的标志变为了@
+    tcpSocket->write(str_msg.toUtf8()); //toLatin1
+    //    saveMessage(nowtime, "Client", str);
 }
 
 // 将信息存储到数据库
@@ -288,42 +435,54 @@ void Client::receiveMessage()
 //     }
 //}
 
-void Client::displayError(QAbstractSocket::SocketError)
-{
-    qDebug() << tcpSocket->errorString();
-}
+//// 连接数据库，判断所输入的用户名和密码是否正确
+//bool Client::check(QString ID, QString PW)
+//{
+//    QSqlDatabase dataBase=QSqlDatabase::addDatabase("QMYSQL");
+//    dataBase.setHostName("localhost");
+//    dataBase.setUserName("vici");
+//    dataBase.setPassword("123456");
+//    dataBase.setDatabaseName("ly");
+//    dataBase.open();
+//    QSqlQuery showquery(dataBase);
+//    QString showsql=QString("select *from user;");
+//    showquery.exec(showsql);
+//    if(showquery.numRowsAffected() != 0)
+//    {
+//        while(showquery.next())
+//        {
+//            if(showquery.value(0).toString() == ID && showquery.value(1).toString() == PW)
+//                return true;
+//        }
+//    }
+//    return false;
+//}
 
-void Client::on_pbPaita_clicked()
-{
-    // 切换到私聊页面
-    ui->stackedWidget->setCurrentIndex(1);
-}
+//// 登录按钮，登录信息正确则连接到服务器
+//void Client::on_connectButton_clicked()
+//{
+//    if(tcpSocket->state()!=QAbstractSocket::ConnectedState)
+//    {
+//        // 获取用户名和密码
+//        QString ID = ui->IDLineEdit->text();
+//        QString PW = ui->PWLineEdit->text();
 
-void Client::on_pbReturn_clicked()
-{
-    // 返回大厅页面
-    ui->stackedWidget->setCurrentIndex(0);
-}
+//        // 检查
+//        if(check(ID, PW))
+//        {
+//            tcpSocket->connectToHost("127.0.0.1", 7777);
 
+//            if(tcpSocket->waitForConnected(10000))
+//            {
+//                QMessageBox::about(NULL, "Connection", "登录成功！");
+//            }
+//            else
+//            {
+//                QMessageBox::about(NULL,"Connection","登录失败！");
+//            }
+//        }
 
-// 快捷键
-void Client::keyReleaseEvent(QKeyEvent *event)
-{
-    if(ui->textEdit_input->hasFocus())
-    {
-        if (event->key() == Qt::Key_Enter || event->key() == Qt::Key_Return)
-        {
-            sendMessage();
-        }
-    }
-}
-
-// 更新用户列表
-void Client::update_member_list()
-{
-    ui->listWidget_MB->clear();
-    for(int i=0; i<(int)str_names.size(); i++)
-    {
-        ui->listWidget_MB->addItem(str_names[i]);
-    }
-}
+//    }
+//    else
+//        QMessageBox::information(NULL,"","已登录。");
+//}

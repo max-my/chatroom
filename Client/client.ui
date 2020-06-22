@@ -126,14 +126,14 @@
      <widget class="QLabel" name="label_Name">
       <property name="geometry">
        <rect>
-        <x>250</x>
+        <x>80</x>
         <y>20</y>
-        <width>151</width>
+        <width>441</width>
         <height>41</height>
        </rect>
       </property>
       <property name="text">
-       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:20pt; font-weight:600;&quot;&gt;游客&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:20pt; font-weight:600;&quot;&gt;快拍Ta！&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
       </property>
       <property name="textFormat">
        <enum>Qt::RichText</enum>
@@ -194,9 +194,9 @@
     <property name="geometry">
      <rect>
       <x>40</x>
-      <y>40</y>
+      <y>19</y>
       <width>391</width>
-      <height>70</height>
+      <height>91</height>
      </rect>
     </property>
     <property name="readOnly">

@@ -136,6 +136,17 @@ void Server::receiveMessage()
                 return;
             }
 
+            if(temp_str.contains("@"))// 私聊请求处理//如何屏蔽发言中的特殊符号？
+            {
+                for(int j=0; j<(int)(ClientArr.size()); j++)
+                {
+                    if(ClientArr[j].name == temp_str.left(temp_str.indexOf("@")))//找到私聊对象
+                        ClientArr[j].tcpSocket->write((ClientArr[i].name + "@" + temp_str.mid(temp_str.indexOf("@")+1)).toUtf8());//发送私聊信息
+                }
+
+                return;
+            }
+
             QDateTime time = QDateTime::currentDateTime();
             QString nowtime = time.toString("yyyy-MM-dd hh:mm:ss");
 
