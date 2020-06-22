@@ -27,9 +27,16 @@ private slots:
 //    void on_logonbutton_clicked();
 //    void saveMessage(QString , QString , QString);
 
+    void on_pbPaita_clicked();
+
+    void on_pbReturn_clicked();
+
 private:
     Ui::Client *ui;
 
     QTcpSocket *tcpSocket;
+
+    bool is_connect;// 连接服务器标志
+    QString str_name;// 客户昵称
 };
 #endif // CLIENT_H

@@ -49,15 +49,17 @@ void Server::acceptConnection()
 void Server::sendMessage()
 {
     //获取 输入框 里所输入的信息。
-    QString str = ui->textEdit_input->toPlainText();
+    QString temp_str = ui->textEdit_input->toPlainText();
     //获取当前时间
     QDateTime time = QDateTime::currentDateTime();
     QString nowtime = time.toString("yyyy-MM-dd hh:mm:ss");
+
     //显示在Server的消息记录里
     ui->textEdit_log->append(nowtime + "    Server:");
-    ui->textEdit_log->append("    " + str);
+    ui->textEdit_log->append("    " + temp_str);
 
-    tcpSocketConnection->write(ui->textEdit_input->toPlainText().toUtf8());
+    QString str_msg = "server:" + temp_str;
+    tcpSocketConnection->write(str_msg.toUtf8());
     // 将这条内容的有关信息存储到mysql。
 //    saveMessage(nowtime, "Server", str);
 }
@@ -87,14 +89,16 @@ void Server::sendMessage()
 // 接收从Client发送来的消息。
 void Server::receiveMessage()
 {
-
     QDateTime time = QDateTime::currentDateTime();
     QString nowtime = time.toString("yyyy-MM-dd hh:mm:ss");
     // 使用readAll函数读取所有信息
-    QString str = tcpSocketConnection->readAll();
-    ui->textEdit_log->append(nowtime + "    Client:");
-    ui->textEdit_log->append("    " + str);
+    QString temp_str = tcpSocketConnection->readAll();
+    int temp_pos = temp_str.indexOf(":");
+    QString temp_name = temp_str.left(temp_pos);
+    QString temp_msg = temp_str.mid(temp_pos+1);
 
+    ui->textEdit_log->append(nowtime + "    " + temp_name);
+    ui->textEdit_log->append("    " + temp_msg);
 }
 
 

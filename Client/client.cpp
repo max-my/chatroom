@@ -4,9 +4,13 @@
 Client::Client(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::Client)
+    , is_connect(false)
 {
     ui->setupUi(this);
 
+    ui->lineEdit_name->setPlaceholderText("请输入昵称");
+
+    // ================通信相关=============== //
     tcpSocket = new QTcpSocket(this);
     // 关联登录按钮和函数，进行确认登录并连接到服务器
 //    connect(ui->connectButton,SIGNAL(clicked()),this,SLOT(on_connectButton_clicked()));
@@ -82,38 +86,73 @@ Client::~Client()
 // 连接按钮
 void Client::on_connectButton_clicked()
 {
-    tcpSocket->connectToHost("127.0.0.1", 7777);
-
-    if(tcpSocket->waitForConnected(10000))
+    if(!is_connect)
     {
-        QMessageBox::about(NULL, "Connection", "登录成功！");
+        // 获取昵称
+        str_name = ui->lineEdit_name->text();
+        if(str_name.length()>10)
+        {
+            QMessageBox::about(NULL, "错误", "昵称最多10个字符！");
+            return;
+        }
+        else if(str_name.length()==0)
+        {
+            str_name = "游客";
+            QMessageBox::about(NULL, "警告", "你将以游客的身份进入大厅！");
+        }
+        else if(str_name.contains(":"))
+        {
+            QMessageBox::about(NULL, "错误", "昵称中不允许包含\":\"！");
+            return;
+        }
+
+        // 连接服务器
+        tcpSocket->connectToHost("127.0.0.1", 7777);
+        if(tcpSocket->waitForConnected(10000))
+        {
+            is_connect = true;
+            ui->pbConnect->setText("退出");
+            QMessageBox::about(NULL, "Connection", "登录成功！");
+        }
+        else
+        {
+            QMessageBox::about(NULL,"Connection","登录失败！");
+        }
     }
     else
     {
-        QMessageBox::about(NULL,"Connection","登录失败！");
+        // TODO:或许需要添加向服务器发送断开指示
+        exit(0); // 会使所有窗口关闭，包括服务器，待修改！
     }
 }
 
-// 发送信息，并存储到数据库
+// 发送信息
 void Client::sendMessage()
 {
-    QString str = ui->textEdit_input->toPlainText();
+    QString temp_str = ui->textEdit_input->toPlainText();
     QDateTime time = QDateTime::currentDateTime();
     QString nowtime = time.toString("yyyy-MM-dd hh:mm:ss");
-    ui->textEdit_log->append(nowtime + "    Client:");
-    ui->textEdit_log->append("    " + str);
-    tcpSocket->write(ui->textEdit_input->toPlainText().toUtf8()); //toLatin1
+    ui->textEdit_log->append(nowtime + "    " + str_name);
+    ui->textEdit_log->append("    " + temp_str);
+
+    QString str_msg = str_name + ":" + temp_str;
+    tcpSocket->write(str_msg.toUtf8()); //toLatin1
 //    saveMessage(nowtime, "Client", str);
 }
 
 // 接收Server发来的消息，并显示到消息记录框里。
 void Client::receiveMessage()
 {
+    QString temp_str = tcpSocket->readAll();
     QDateTime time = QDateTime::currentDateTime();
     QString nowtime = time.toString("yyyy-MM-dd hh:mm:ss");
-    QString str = tcpSocket->readAll();
-    ui->textEdit_log->append(nowtime + "    Server:");
-    ui->textEdit_log->append("    " + str);
+    int temp_pos = temp_str.indexOf(":");
+    QString temp_name = temp_str.left(temp_pos);
+    QString temp_msg = temp_str.mid(temp_pos+1);
+
+
+    ui->textEdit_log->append(nowtime + "    " + temp_name);
+    ui->textEdit_log->append("    " + temp_msg);
 }
 
 // 将信息存储到数据库
@@ -168,4 +207,16 @@ void Client::receiveMessage()
 void Client::displayError(QAbstractSocket::SocketError)
 {
     qDebug() << tcpSocket->errorString();
+}
+
+void Client::on_pbPaita_clicked()
+{
+    // 切换到私聊页面
+    ui->stackedWidget->setCurrentIndex(1);
+}
+
+void Client::on_pbReturn_clicked()
+{
+    // 返回大厅页面
+    ui->stackedWidget->setCurrentIndex(0);
 }
