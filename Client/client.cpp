@@ -146,6 +146,9 @@ void Client::sendMessage()
     else
     {
         QString temp_str = ui->textEdit_input->toPlainText();
+        if(temp_str=="")
+            return;
+
         ui->textEdit_input->clear();
         ui->textEdit_input->setFocus();
 
@@ -172,8 +175,6 @@ void Client::receiveMessage()
     int temp_pos = temp_str.indexOf(":");
     QString temp_name = temp_str.left(temp_pos);
     QString temp_msg = temp_str.mid(temp_pos+1);
-
-
 
     ui->textEdit_log->append("<b>" + nowtime + " <font color=blue>" + temp_name + "</font></b>");
     ui->textEdit_log->setAlignment(Qt::AlignLeft);

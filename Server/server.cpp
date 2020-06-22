@@ -55,6 +55,9 @@ void Server::sendMessage()
 {
     //获取 输入框 里所输入的信息。
     QString temp_str = ui->textEdit_input->toPlainText();
+    if(temp_str=="")//禁止发空信息
+        return;
+
     ui->textEdit_input->clear();
     ui->textEdit_input->setFocus();
 
