@@ -14,7 +14,7 @@ Client::Client(QWidget *parent, QString user_name)
     ui->lineEdit_name->setPlaceholderText(user_name);
 
     // 关联连接按钮和函数，连接到服务器
-    connect(ui->pbConnect,SIGNAL(clicked()),this,SLOT(on_connectButton_clicked()));
+    connect(ui->pbConnect,SIGNAL(clicked()),this,SLOT(OnConnectClicked()));
 
     // 将发送按钮和sendMessage函数关联起来
     connect(ui->pbSend,SIGNAL(clicked(bool)),this,SLOT(sendMessage()));
@@ -34,7 +34,7 @@ void Client::displayError(QAbstractSocket::SocketError)
 }
 
 // 连接按钮
-void Client::on_connectButton_clicked()
+void Client::OnConnectClicked()
 {
     if(!is_connect)
     {
@@ -104,22 +104,26 @@ void Client::offline()
 
     // 清空套接字
     tcpSocket->disconnectFromHost();
-    tcpSocket->waitForDisconnected();
-    delete tcpSocket;//不能delete，因为初始化在构造函数里//挪了初始化位置
+    if (tcpSocket->state() == QAbstractSocket::UnconnectedState \
+            || tcpSocket->waitForDisconnected(1000))  //已断开连接则进入if{}
+    {
+        delete tcpSocket;//不能delete，因为初始化在构造函数里//挪了初始化位置
+        // 初始化全局变量
+        str_name = "";
+        str_friend = "";
+        str_names.clear();
+        update_member_list();
 
-    // 初始化全局变量
-    str_name = "";
-    str_friend = "";
-    str_names.clear();
-    update_member_list();
+        is_Pai_Others = false;
+        send_Pai_to_others = false;
+        is_connect = false;
+        get_names = false;
 
-    is_Pai_Others = false;
-    send_Pai_to_others = false;
-    is_connect = false;
-    get_names = false;
+        ui->pbConnect->setText("连接");
+        ui->textEdit_notice->append("断开连接！");
+    }
+//    tcpSocket->waitForDisconnected();
 
-    ui->pbConnect->setText("连接");
-    ui->textEdit_notice->append("断开连接！");
 }
 
 // 发送信息
@@ -260,30 +264,32 @@ void Client::fuck_GOD()
 {
     QMessageBox msgbox;
     msgbox.setModal(false);
-    msgbox.setStandardButtons(QMessageBox::Yes);
-    msgbox.button(QMessageBox::Yes)->setText("Damn it");
+//    msgbox.setStandardButtons(QMessageBox::Yes);
+//    msgbox.button(QMessageBox::Yes)->setText("Damn it");
     QMessageBox::information(NULL, "GOD", "Fuck off");
 
     // 清空套接字
     tcpSocket->disconnectFromHost();
-    tcpSocket->waitForDisconnected();
-    delete tcpSocket;
+    if (tcpSocket->state() == QAbstractSocket::UnconnectedState \
+            || tcpSocket->waitForDisconnected(1000))  //已断开连接则进入if{}
+    {
+        delete tcpSocket;
 
-    // 初始化全局变量
-    str_name = "";
-    str_friend = "";
-    str_names.clear();
-    update_member_list();
+        // 初始化全局变量
+        str_name = "";
+        str_friend = "";
+        str_names.clear();
+        update_member_list();
 
-    is_Pai_Others = false;
-    send_Pai_to_others = false;
-    is_connect = false;
-    get_names = false;
+        is_Pai_Others = false;
+        send_Pai_to_others = false;
+        is_connect = false;
+        get_names = false;
 
-    ui->pbConnect->setText("连接");
-    ui->textEdit_notice->append("断开连接！");
+        ui->pbConnect->setText("连接");
+        ui->textEdit_notice->append("断开连接！");
+    }
 }
-
 // 私聊按钮
 void Client::on_pbPaita_clicked()
 {

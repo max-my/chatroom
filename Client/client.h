@@ -21,7 +21,7 @@ public:
     ~Client();
 
 private slots:
-    void on_connectButton_clicked();
+    void OnConnectClicked();
     void receiveMessage();
     void displayError(QAbstractSocket::SocketError);
     void sendMessage();

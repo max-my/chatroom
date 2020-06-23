@@ -98,5 +98,10 @@ void RegistrationForm::registration()
 
 void RegistrationForm::returnLogin()
 {
-    hide();
+    reject();//关闭窗体，并设置返回值为Accepted
+}
+
+void RegistrationForm::closeEvent(QCloseEvent *event)
+{
+    done(10);
 }

@@ -15,10 +15,13 @@ class LoginForm : public QDialog
 
 public:
     explicit LoginForm(QDialog *parent = 0);
+//    ~LoginForm();
+
     QString UserName;
 public slots:
     void registration();
     void login();
+    void closeEvent(QCloseEvent *event);
 
 private:
     QLabel *userNameLbl;

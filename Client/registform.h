@@ -19,6 +19,7 @@ public:
 public slots:
     void registration();
     void returnLogin();
+    void closeEvent(QCloseEvent *event);
 
 private:
     QLabel *userNameLbl;
