@@ -33,6 +33,7 @@ Client::Client(QWidget *parent)
 
 Client::~Client()
 {
+    offline();// 通知服务器我下线了
     delete ui;
 }
 
@@ -83,9 +84,34 @@ void Client::on_connectButton_clicked()
     }
     else
     {
-        // TODO:或许需要添加向服务器发送断开指示
-        exit(0); // 会使所有窗口关闭，包括服务器，待修改！
+        offline();// 下线
     }
+}
+
+// 下线
+void Client::offline()
+{
+    // 发送下线信息
+    tcpSocket->write((str_name + "%").toUtf8());
+
+    // 清空套接字
+    tcpSocket->disconnectFromHost();
+    tcpSocket->waitForDisconnected();
+//    delete tcpSocket;//不能delete，因为初始化在构造函数里
+
+    // 初始化全局变量
+    str_name = "";
+    str_friend = "";
+    str_names.clear();
+    update_member_list();
+
+    is_Pai_Others = false;
+    send_Pai_to_others = false;
+    is_connect = false;
+    get_names = false;
+
+    ui->pbConnect->setText("连接");
+    ui->textEdit_notice->append("断开连接！");
 }
 
 // 发送信息
@@ -150,7 +176,12 @@ void Client::receiveMessage()
     {
         // 更新成员列表
         temp_str = temp_str.left(temp_str.indexOf("%"));
-        for(int i=0; i<(int)str_names.size(); i++)
+        if(temp_str == str_name)//我被踢了
+        {
+            fuck_GOD();
+            return;
+        }
+        for(int i=0; i<(int)str_names.size(); i++)// 删除下线的成员
         {
             if(str_names[i] == temp_str)
             {
@@ -159,6 +190,7 @@ void Client::receiveMessage()
             }
         }
         update_member_list();
+         ui->textEdit_notice->append("<font color=red><b>" + temp_str + "</b>坐着火箭离开聊天室！！！！</font>");
         return;
     }
     else if (temp_str.contains("@"))// 切换私聊
@@ -189,10 +221,38 @@ void Client::receiveMessage()
     QDateTime time = QDateTime::currentDateTime();
     QString nowtime = time.toString("yyyy-MM-dd hh:mm:ss");
 
-
     ui->textEdit_log->append("<b>" + nowtime + " <font color=blue>" + temp_name + "</font></b>");
     ui->textEdit_log->setAlignment(Qt::AlignLeft);
     ui->textEdit_log->append(temp_msg);
+}
+
+// 被踢了
+void Client::fuck_GOD()
+{
+    QMessageBox msgbox;
+    msgbox.setModal(false);
+    msgbox.setStandardButtons(QMessageBox::Yes);
+    msgbox.button(QMessageBox::Yes)->setText("Damn it");
+    QMessageBox::information(NULL, "GOD", "Fuck off");
+
+    // 清空套接字
+    tcpSocket->disconnectFromHost();
+    tcpSocket->waitForDisconnected();
+//    delete tcpSocket;
+
+    // 初始化全局变量
+    str_name = "";
+    str_friend = "";
+    str_names.clear();
+    update_member_list();
+
+    is_Pai_Others = false;
+    send_Pai_to_others = false;
+    is_connect = false;
+    get_names = false;
+
+    ui->pbConnect->setText("连接");
+    ui->textEdit_notice->append("断开连接！");
 }
 
 

@@ -49,7 +49,6 @@ void Server::acceptConnection()
     ClientArr.push_back(client);
 }
 
-
 // 关闭服务器，断开连接。
 //void Server::on_stopButton_clicked()
 //{
@@ -123,6 +122,9 @@ void Server::receiveMessage()
 
             if(ClientArr[i].name=="")// 第一次接收客户端信息一定是客户昵称
             {
+                ui->textEdit_log->append("<b><font color=red>" + temp_str + "已上线</font></b>");
+                ui->textEdit_log->setAlignment(Qt::AlignCenter);
+
                 ClientArr[i].name = temp_str;
                 update_member_list();
 
@@ -144,6 +146,24 @@ void Server::receiveMessage()
                         ClientArr[j].tcpSocket->write((ClientArr[i].name + "@" + temp_str.mid(temp_str.indexOf("@")+1)).toUtf8());//发送私聊信息
                 }
 
+                return;
+            }
+
+            if(temp_str.contains("%"))// 有人下线
+            {
+                QString PityGuy = temp_str.left(temp_str.indexOf("%"));
+
+                ui->textEdit_log->append("<b><font color=red>" + PityGuy + "已下线</font></b>");
+                ui->textEdit_log->setAlignment(Qt::AlignCenter);
+
+                ClientArr.erase(ClientArr.begin()+i);// 不再维护该用户的连接
+
+                for(int j=0; j<(int)(ClientArr.size()); j++)
+                {
+                    // 将消息发送到其他客户端
+                    ClientArr[j].tcpSocket->write(temp_str.toUtf8());
+                }
+                update_member_list();
                 return;
             }
 
@@ -195,5 +215,35 @@ void Server::update_member_list()
     for(int i=0; i<(int)ClientArr.size(); i++)
     {
         ui->listWidget_MB->addItem(ClientArr[i].name);
+    }
+}
+
+// 踢人
+void Server::on_pushButton_Fuckoff_clicked()
+{
+    // 获取对象昵称
+    QString PityGuy = ui->listWidget_MB->currentItem()->text();
+    QString temp_msg = "您确定让" + PityGuy + "滚蛋？";
+
+    QMessageBox msgbox;
+    msgbox.setModal(false);
+    msgbox.setStandardButtons(QMessageBox::Yes);
+    msgbox.setStandardButtons(QMessageBox::No);
+    if(QMessageBox::Yes == QMessageBox::question(NULL,"注意",temp_msg))
+    {
+        for(int j=0; j<(int)(ClientArr.size()); j++)
+        {
+            // 将消息发送给所有人
+            ClientArr[j].tcpSocket->write((PityGuy + "%").toUtf8());
+            ClientArr[j].tcpSocket->waitForBytesWritten();
+            if(ClientArr[j].name == PityGuy)
+            {
+                ClientArr.erase(ClientArr.begin()+j);// 不再维护该用户的连接
+            }
+        }
+
+        ui->textEdit_log->append("<b><font color=red>" + PityGuy + "已被踢</font></b>");
+        ui->textEdit_log->setAlignment(Qt::AlignCenter);
+        update_member_list();
     }
 }

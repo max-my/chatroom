@@ -25,16 +25,6 @@ public:
     Server(QWidget *parent = nullptr);
     ~Server();
 
-private slots:
-    // 定义函数，在cpp里实现。
-//    void on_stopButton_clicked();
-    void acceptConnection();
-    void sendMessage();
-//    void displayError(QAbstractSocket::SocketError);
-    void receiveMessage();
-//    void saveMessage(QString , QString , QString);
-    void keyReleaseEvent(QKeyEvent *event);
-
 private:
     Ui::Server *ui;
 
@@ -49,5 +39,16 @@ private:
     vector<Client> ClientArr;
     void update_member_list();// 更新用户列表
 
+private slots:
+    // 定义函数，在cpp里实现。
+//    void on_stopButton_clicked();
+    void acceptConnection();
+    void sendMessage();
+//    void displayError(QAbstractSocket::SocketError);
+    void receiveMessage();
+//    void saveMessage(QString , QString , QString);
+    void keyReleaseEvent(QKeyEvent *event);
+
+    void on_pushButton_Fuckoff_clicked();
 };
 #endif // SERVER_H

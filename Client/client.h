@@ -53,5 +53,7 @@ private:
 
     void update_member_list();// 更新用户列表
     void handle_private_chat(QString str_msg);// 处理私聊
+    void fuck_GOD();// 被踢了
+    void offline();// 爷自己走
 };
 #endif // CLIENT_H
