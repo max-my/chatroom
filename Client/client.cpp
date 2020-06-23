@@ -255,7 +255,6 @@ void Client::fuck_GOD()
     ui->textEdit_notice->append("断开连接！");
 }
 
-
 void Client::displayError(QAbstractSocket::SocketError)
 {
     qDebug() << tcpSocket->errorString();
@@ -266,7 +265,11 @@ void Client::on_pbPaita_clicked()
 {
     // 获取对象昵称
     str_friend = ui->listWidget_MB->currentItem()->text();
+
+    QMessageBox msgbox;
+    msgbox.setModal(false);// 设置非模态
     QMessageBox::information(NULL, "提示", "请耐心等待"+str_friend+"同意");
+
     // 切换到私聊页面
     ui->label_Name->setText("<b>"+str_friend+"的小窗</b>");
 
@@ -387,7 +390,9 @@ void Client::handle_private_chat(QString str_msg)
     {
         QString temp_msg = str_msg.left(str_msg.indexOf("@")) + "想拍你";
 
-        if(QMessageBox::Yes == QMessageBox::question(this,"注意",temp_msg,QMessageBox::Yes | QMessageBox:: No))
+        QMessageBox msgbox;
+        msgbox.setModal(false);// 设置非模态
+        if(QMessageBox::Yes == QMessageBox::question(NULL,"注意",temp_msg,QMessageBox::Yes | QMessageBox:: No))
         {
     //        qDebug()<<"yes";
             str_friend = str_msg.left(str_msg.indexOf("@"));
@@ -421,9 +426,20 @@ void Client::sendPrivateMessage()
 {
     if(!is_Pai_Others)//没人给拍不能发消息
     {
-        QMessageBox::information(this,"注意","请返回大厅重新拍人");
-        ui->textEdit_input2->clear();
-        ui->pbReturn->setFocus();
+        if(send_Pai_to_others)
+        {
+            QMessageBox msgbox;
+            msgbox.setModal(false);// 设置非模态
+            QMessageBox::information(NULL,"注意","请耐心等待");
+        }
+        else
+        {
+            QMessageBox msgbox;
+            msgbox.setModal(false);// 设置非模态
+            QMessageBox::information(NULL,"注意","请返回大厅重新拍人");
+            ui->textEdit_input2->clear();
+            ui->pbReturn->setFocus();
+        }
         return;
     }
     QString temp_str = ui->textEdit_input2->toPlainText();
