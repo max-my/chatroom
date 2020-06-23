@@ -231,6 +231,7 @@ void Server::on_pushButton_Fuckoff_clicked()
     msgbox.setStandardButtons(QMessageBox::No);
     if(QMessageBox::Yes == QMessageBox::question(NULL,"注意",temp_msg))
     {
+        int temp_pos = 0;
         for(int j=0; j<(int)(ClientArr.size()); j++)
         {
             // 将消息发送给所有人
@@ -238,9 +239,11 @@ void Server::on_pushButton_Fuckoff_clicked()
             ClientArr[j].tcpSocket->waitForBytesWritten();
             if(ClientArr[j].name == PityGuy)
             {
-                ClientArr.erase(ClientArr.begin()+j);// 不再维护该用户的连接
+                temp_pos = j;
             }
         }
+
+        ClientArr.erase(ClientArr.begin()+temp_pos);// 不再维护该用户的连接// 放在循环外删除确保每个人都收到了下线信息
 
         ui->textEdit_log->append("<b><font color=red>" + PityGuy + "已被踢</font></b>");
         ui->textEdit_log->setAlignment(Qt::AlignCenter);

@@ -13,19 +13,9 @@ Client::Client(QWidget *parent)
 
     ui->lineEdit_name->setPlaceholderText("请输入昵称");
 
-
-
-    // ================通信相关=============== //
-    tcpSocket = new QTcpSocket(this);
-    // 关联登录按钮和函数，进行确认登录并连接到服务器
-//    connect(ui->connectButton,SIGNAL(clicked()),this,SLOT(on_connectButton_clicked()));
-
     // 关联连接按钮和函数，连接到服务器
     connect(ui->pbConnect,SIGNAL(clicked()),this,SLOT(on_connectButton_clicked()));
 
-    connect(tcpSocket, SIGNAL(error(QAbstractSocket::SocketError)),this, SLOT(displayError(QAbstractSocket::SocketError)));
-    // 接受Server发来的消息，readyRead()准备读取信号，异步读取数据。
-    connect(tcpSocket, SIGNAL(readyRead()), this, SLOT(receiveMessage()));
     // 将发送按钮和sendMessage函数关联起来
     connect(ui->pbSend,SIGNAL(clicked(bool)),this,SLOT(sendMessage()));
     connect(ui->pbSend2,SIGNAL(clicked(bool)),this,SLOT(sendPrivateMessage()));
@@ -42,6 +32,11 @@ void Client::on_connectButton_clicked()
 {
     if(!is_connect)
     {
+        tcpSocket = new QTcpSocket(this);
+        connect(tcpSocket, SIGNAL(error(QAbstractSocket::SocketError)),this, SLOT(displayError(QAbstractSocket::SocketError)));
+        // 接受Server发来的消息，readyRead()准备读取信号，异步读取数据。
+        connect(tcpSocket, SIGNAL(readyRead()), this, SLOT(receiveMessage()));
+
         // 获取昵称
         str_name = ui->lineEdit_name->text();
         if(str_name.length()>10)
@@ -97,7 +92,7 @@ void Client::offline()
     // 清空套接字
     tcpSocket->disconnectFromHost();
     tcpSocket->waitForDisconnected();
-//    delete tcpSocket;//不能delete，因为初始化在构造函数里
+    delete tcpSocket;//不能delete，因为初始化在构造函数里//挪了初始化位置
 
     // 初始化全局变量
     str_name = "";
@@ -238,7 +233,7 @@ void Client::fuck_GOD()
     // 清空套接字
     tcpSocket->disconnectFromHost();
     tcpSocket->waitForDisconnected();
-//    delete tcpSocket;
+    delete tcpSocket;
 
     // 初始化全局变量
     str_name = "";
