@@ -42,6 +42,7 @@ private:
     QTcpSocket *tcpSocket;
 
     bool is_connect;// 连接服务器标志
+    bool is_name_exist;// 昵称重复标志
     bool get_names;// 获取其他客户信息标志
     bool is_Pai_Others;// 私聊中
     bool send_Pai_to_others;// 发起私聊

@@ -22,6 +22,7 @@ Server::Server(QWidget *parent)
 
 Server::~Server()
 {
+    // TODO:添加服务器关闭前通知客户端
     delete ui;
 }
 
@@ -48,14 +49,6 @@ void Server::acceptConnection()
     // 把套接字加入vector
     ClientArr.push_back(client);
 }
-
-// 关闭服务器，断开连接。
-//void Server::on_stopButton_clicked()
-//{
-//    tcpSocketConnection->abort();
-//    QMessageBox::about(NULL,"Connection","服务器关闭，连接终止。");
-//}
-
 
 // 向Client发送消息
 void Server::sendMessage()
@@ -88,28 +81,6 @@ void Server::sendMessage()
 //    saveMessage(nowtime, "Server", str);
 }
 
-// 存储到mysql
-//void Server::saveMessage(QString time, QString user, QString content)
-//{
-//	// 连接并打开mysql
-//    QSqlDatabase dataBase=QSqlDatabase::addDatabase("QMYSQL");
-//    dataBase.setHostName("localhost");
-//    dataBase.setUserName("root");
-//    dataBase.setPassword("123456");
-//    dataBase.setDatabaseName("ly");
-//    dataBase.open();
-//    QSqlQuery query(dataBase);
-//    QString sql=QString("select *from chat");
-//    query.exec(sql);
-//    if(query.numRowsAffected() == 0)
-//    {
-//		// 将信息insert到chat表里。
-//          QString savesql = QString("INSERT INTO chat(time, user, content)");
-//          savesql += QString(" VALUES('%1','%2','%3')").arg(time).arg(user).arg(content);
-//     }
-//}
-
-
 // 接收从Client发送来的消息。
 void Server::receiveMessage()
 {
@@ -120,8 +91,19 @@ void Server::receiveMessage()
             // 使用readAll函数读取所有信息
             QString temp_str = ClientArr[i].tcpSocket->readAll();
 
-            if(ClientArr[i].name=="")// 第一次接收客户端信息一定是客户昵称
+            if(temp_str.contains("^"))// 接收客户昵称
             {
+                temp_str = temp_str.left(temp_str.indexOf("^"));
+                for(int j=0; j<(int)ClientArr.size(); j++)  //先遍历一遍
+                {
+                    if( ClientArr[j].name==temp_str){
+                        ClientArr[i].tcpSocket->write((temp_str+"$").toUtf8());// 昵称重复，通知用户
+                        return;
+                    }
+                }
+
+                ClientArr[i].tcpSocket->write((temp_str+"&").toUtf8());// 昵称通过，通知用户
+
                 ui->textEdit_log->append("<b><font color=red>" + temp_str + "已上线</font></b>");
                 ui->textEdit_log->setAlignment(Qt::AlignCenter);
 
@@ -189,13 +171,6 @@ void Server::receiveMessage()
     }
 }
 
-
-// 异常信息
-//void Server::displayError(QAbstractSocket::SocketError)
-//{
-//     qDebug() << tcpSocketConnection->errorString();
-//}
-
 // 快捷键
 void Server::keyReleaseEvent(QKeyEvent *event)
 {
@@ -250,3 +225,39 @@ void Server::on_pushButton_Fuckoff_clicked()
         update_member_list();
     }
 }
+
+// 关闭服务器，断开连接。
+//void Server::on_stopButton_clicked()
+//{
+//    tcpSocketConnection->abort();
+//    QMessageBox::about(NULL,"Connection","服务器关闭，连接终止。");
+//}
+
+
+// 异常信息
+//void Server::displayError(QAbstractSocket::SocketError)
+//{
+//     qDebug() << tcpSocketConnection->errorString();
+//}
+
+
+// 存储到mysql
+//void Server::saveMessage(QString time, QString user, QString content)
+//{
+//	// 连接并打开mysql
+//    QSqlDatabase dataBase=QSqlDatabase::addDatabase("QMYSQL");
+//    dataBase.setHostName("localhost");
+//    dataBase.setUserName("root");
+//    dataBase.setPassword("123456");
+//    dataBase.setDatabaseName("ly");
+//    dataBase.open();
+//    QSqlQuery query(dataBase);
+//    QString sql=QString("select *from chat");
+//    query.exec(sql);
+//    if(query.numRowsAffected() == 0)
+//    {
+//		// 将信息insert到chat表里。
+//          QString savesql = QString("INSERT INTO chat(time, user, content)");
+//          savesql += QString(" VALUES('%1','%2','%3')").arg(time).arg(user).arg(content);
+//     }
+//}

@@ -27,16 +27,16 @@ Client::~Client()
     delete ui;
 }
 
+void Client::displayError(QAbstractSocket::SocketError)
+{
+    qDebug() << tcpSocket->errorString();
+}
+
 // 连接按钮
 void Client::on_connectButton_clicked()
 {
     if(!is_connect)
     {
-        tcpSocket = new QTcpSocket(this);
-        connect(tcpSocket, SIGNAL(error(QAbstractSocket::SocketError)),this, SLOT(displayError(QAbstractSocket::SocketError)));
-        // 接受Server发来的消息，readyRead()准备读取信号，异步读取数据。
-        connect(tcpSocket, SIGNAL(readyRead()), this, SLOT(receiveMessage()));
-
         // 获取昵称
         str_name = ui->lineEdit_name->text();
         if(str_name.length()>10)
@@ -49,9 +49,9 @@ void Client::on_connectButton_clicked()
             str_name = "游客";
             QMessageBox::warning(NULL, "警告", "你将以游客的身份进入大厅！");
         }
-        else if(str_name.contains(":") || str_name.contains("@") || str_name.contains("*") || str_name.contains("%"))
+        else if(str_name.contains(":") || str_name.contains("@") || str_name.contains("*") || str_name.contains("^") || str_name.contains("%") || str_name.contains("#") || str_name.contains("&") || str_name.contains("$"))
         {
-            QMessageBox::critical(NULL, "错误", "昵称中不允许包含\":@*%\"！");
+            QMessageBox::critical(NULL, "错误", "昵称中不允许包含\":^@*%#&$\"！");
             return;
         }
         else if(str_name=="GOD")
@@ -60,21 +60,33 @@ void Client::on_connectButton_clicked()
             return;
         }
 
-        // 连接服务器
-        tcpSocket->connectToHost("127.0.0.1", 7777);
-        if(tcpSocket->waitForConnected(10000))
+
+        if(!is_name_exist)// 第一次发送
         {
-            is_connect = true;
-            ui->pbConnect->setText("退出");
+            tcpSocket = new QTcpSocket(this);
+            connect(tcpSocket, SIGNAL(error(QAbstractSocket::SocketError)),this, SLOT(displayError(QAbstractSocket::SocketError)));
+            // 接受Server发来的消息，readyRead()准备读取信号，异步读取数据。
+            connect(tcpSocket, SIGNAL(readyRead()), this, SLOT(receiveMessage()));
 
-            // 第一次连接发送客户昵称
-            tcpSocket->write(str_name.toUtf8());
-
-            ui->textEdit_notice->append("登录成功！");
+            // 连接服务器
+            tcpSocket->connectToHost("127.0.0.1", 7777);
+            if(tcpSocket->waitForConnected(10000))
+            {
+                is_connect = true;
+                ui->pbConnect->setText("退出");
+                ui->textEdit_notice->append("连接成功！");
+                // 第一次连接发送客户昵称
+                tcpSocket->write((str_name + "^").toUtf8());
+            }
+            else
+            {
+                QMessageBox::about(NULL,"Connection","连接失败，请检查服务器是否开启！");
+            }
         }
-        else
+        else //修改昵称
         {
-            QMessageBox::about(NULL,"Connection","登录失败！");
+            // 发送客户昵称
+            tcpSocket->write((str_name + "^").toUtf8());
         }
     }
     else
@@ -148,77 +160,98 @@ void Client::receiveMessage()
     QString temp_name = temp_str.left(temp_pos);
     QString temp_msg = temp_str.mid(temp_pos+1);
 
-    if(temp_name == "GOD")//服务器发来的消息在notice显示
+    if (temp_str.contains("$"))// 重新改名字
     {
-        ui->textEdit_notice->append("<b><font color=red>" + temp_str + "</font></b>");
+
+        QMessageBox::critical(NULL, "注意", "昵称重复！ 重新修改昵称！");
+        ui->pbConnect->setText("修改");
+        is_connect=false;
+        is_name_exist = true;
         return;
     }
-    else if (temp_str.contains("*"))// 添加用户
+    if (temp_str.contains("&"))
     {
-        // 更新成员列表
-        temp_str = temp_str.left(temp_str.indexOf("*"));
-        str_names.push_back(temp_str);
-        update_member_list();
-
-        ui->textEdit_notice->append("<font color=blue><b>" + temp_str + "</b>开着跑车进入聊天室,快去拍Ta！</font>");
-
-        if(!get_names)//处理第一个用户特殊情况
-            get_names = true;
-
+        ui->textEdit_notice->append("登录成功！");
+        ui->pbConnect->setText("退出");
+        is_connect=true;
+        is_name_exist = false;
         return;
     }
-    else if (temp_str.contains("%"))// 删除用户
+
+    if(is_connect)
     {
-        // 更新成员列表
-        temp_str = temp_str.left(temp_str.indexOf("%"));
-        if(temp_str == str_name)//我被踢了
+        if(temp_name == "GOD")//服务器发来的消息在notice显示
         {
-            fuck_GOD();
+            ui->textEdit_notice->append("<b><font color=red>" + temp_str + "</font></b>");
             return;
         }
-        for(int i=0; i<(int)str_names.size(); i++)// 删除下线的成员
+        else if (temp_str.contains("*"))// 添加用户
         {
-            if(str_names[i] == temp_str)
+            // 更新成员列表
+            temp_str = temp_str.left(temp_str.indexOf("*"));
+            str_names.push_back(temp_str);
+            update_member_list();
+
+            ui->textEdit_notice->append("<font color=blue><b>" + temp_str + "</b>开着跑车进入聊天室,快去拍Ta！</font>");
+
+            if(!get_names)//处理第一个用户特殊情况
+                get_names = true;
+
+            return;
+        }
+        else if (temp_str.contains("%"))// 删除用户
+        {
+            // 更新成员列表
+            temp_str = temp_str.left(temp_str.indexOf("%"));
+            if(temp_str == str_name)//我被踢了
             {
-                str_names.erase(str_names.begin()+i);
-                break;
+                fuck_GOD();
+                return;
             }
+            for(int i=0; i<(int)str_names.size(); i++)// 删除下线的成员
+            {
+                if(str_names[i] == temp_str)
+                {
+                    str_names.erase(str_names.begin()+i);
+                    break;
+                }
+            }
+            update_member_list();
+            ui->textEdit_notice->append("<font color=red><b>" + temp_str + "</b>坐着火箭离开聊天室！！！！</font>");
+            return;
         }
-        update_member_list();
-         ui->textEdit_notice->append("<font color=red><b>" + temp_str + "</b>坐着火箭离开聊天室！！！！</font>");
-        return;
-    }
-    else if (temp_str.contains("@"))// 切换私聊
-    {
-        // 询问接不接受私聊
-        handle_private_chat(temp_str);
-        return;
-    }
-    else if(!get_names)// 第一次接收，存储已登录的用户信息// 位置必须在添加用户后！
-    {
-        int temp_num = temp_str.count(":");
-        for (int i=0; i<temp_num; i++)
+        else if (temp_str.contains("@"))// 切换私聊
         {
-            // 取出一个
-            int temp_pos = temp_str.indexOf(":");
-            QString temp_name = temp_str.left(temp_pos);
-            // 压入一个
-            str_names.push_back(temp_name);
-            // 截断
-            temp_str = temp_str.mid(temp_pos+1);
+            // 询问接不接受私聊
+            handle_private_chat(temp_str);
+            return;
         }
-        update_member_list();
-        get_names = true;
-        return;
+        else if(!get_names)// 第一次接收，存储已登录的用户信息// 位置必须在添加用户后！
+        {
+            int temp_num = temp_str.count(":");
+            for (int i=0; i<temp_num; i++)
+            {
+                // 取出一个
+                int temp_pos = temp_str.indexOf(":");
+                QString temp_name = temp_str.left(temp_pos);
+                // 压入一个
+                str_names.push_back(temp_name);
+                // 截断
+                temp_str = temp_str.mid(temp_pos+1);
+            }
+            update_member_list();
+            get_names = true;
+            return;
+        }
+
+        // 正常消息显示
+        QDateTime time = QDateTime::currentDateTime();
+        QString nowtime = time.toString("yyyy-MM-dd hh:mm:ss");
+
+        ui->textEdit_log->append("<b>" + nowtime + " <font color=blue>" + temp_name + "</font></b>");
+        ui->textEdit_log->setAlignment(Qt::AlignLeft);
+        ui->textEdit_log->append(temp_msg);
     }
-
-
-    QDateTime time = QDateTime::currentDateTime();
-    QString nowtime = time.toString("yyyy-MM-dd hh:mm:ss");
-
-    ui->textEdit_log->append("<b>" + nowtime + " <font color=blue>" + temp_name + "</font></b>");
-    ui->textEdit_log->setAlignment(Qt::AlignLeft);
-    ui->textEdit_log->append(temp_msg);
 }
 
 // 被踢了
@@ -248,11 +281,6 @@ void Client::fuck_GOD()
 
     ui->pbConnect->setText("连接");
     ui->textEdit_notice->append("断开连接！");
-}
-
-void Client::displayError(QAbstractSocket::SocketError)
-{
-    qDebug() << tcpSocket->errorString();
 }
 
 // 私聊按钮
@@ -389,7 +417,7 @@ void Client::handle_private_chat(QString str_msg)
         msgbox.setModal(false);// 设置非模态
         if(QMessageBox::Yes == QMessageBox::question(NULL,"注意",temp_msg,QMessageBox::Yes | QMessageBox:: No))
         {
-    //        qDebug()<<"yes";
+            //        qDebug()<<"yes";
             str_friend = str_msg.left(str_msg.indexOf("@"));
             tcpSocket->write((str_friend+"@YES").toUtf8());
 
@@ -409,14 +437,14 @@ void Client::handle_private_chat(QString str_msg)
         }
         else
         {
-    //        qDebug()<<"no";
+            //        qDebug()<<"no";
             tcpSocket->write((str_msg+"NO").toUtf8());
             return;
         }
     }
 }
 
-
+// 发送私聊信息
 void Client::sendPrivateMessage()
 {
     if(!is_Pai_Others)//没人给拍不能发消息
