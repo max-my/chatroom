@@ -1,7 +1,7 @@
 #include "client.h"
 #include "ui_client.h"
 
-Client::Client(QWidget *parent)
+Client::Client(QWidget *parent, QString user_name)
     : QMainWindow(parent)
     , ui(new Ui::Client)
     , is_connect(false)
@@ -11,7 +11,7 @@ Client::Client(QWidget *parent)
 {
     ui->setupUi(this);
 
-    ui->lineEdit_name->setPlaceholderText("请输入昵称");
+    ui->lineEdit_name->setPlaceholderText(user_name);
 
     // 关联连接按钮和函数，连接到服务器
     connect(ui->pbConnect,SIGNAL(clicked()),this,SLOT(on_connectButton_clicked()));
@@ -20,6 +20,7 @@ Client::Client(QWidget *parent)
     connect(ui->pbSend,SIGNAL(clicked(bool)),this,SLOT(sendMessage()));
     connect(ui->pbSend2,SIGNAL(clicked(bool)),this,SLOT(sendPrivateMessage()));
 }
+
 
 Client::~Client()
 {
@@ -46,8 +47,8 @@ void Client::on_connectButton_clicked()
         }
         else if(str_name.length()==0)
         {
-            str_name = "游客";
-            QMessageBox::warning(NULL, "警告", "你将以游客的身份进入大厅！");
+            QMessageBox::critical(NULL, "错误", "请输入昵称");
+            return;
         }
         else if(str_name.contains(":") || str_name.contains("@") || str_name.contains("*") || str_name.contains("^") || str_name.contains("%") || str_name.contains("#") || str_name.contains("&") || str_name.contains("$"))
         {
@@ -348,6 +349,13 @@ void Client::keyReleaseEvent(QKeyEvent *event)
         if (event->key() == Qt::Key_Enter || event->key() == Qt::Key_Return)
         {
             sendMessage();
+        }
+    }
+    if(ui->textEdit_input2->hasFocus())
+    {
+        if (event->key() == Qt::Key_Enter || event->key() == Qt::Key_Return)
+        {
+            sendPrivateMessage();
         }
     }
 }

@@ -17,7 +17,7 @@ class Client : public QMainWindow
     Q_OBJECT
 
 public:
-    Client(QWidget *parent = nullptr);
+    Client(QWidget *parent = nullptr, QString user_name = "游客");
     ~Client();
 
 private slots:

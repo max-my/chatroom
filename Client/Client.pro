@@ -17,11 +17,15 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    loginform.cpp \
     main.cpp \
-    client.cpp
+    client.cpp \
+    registform.cpp
 
 HEADERS += \
-    client.h
+    client.h \
+    loginform.h \
+    registform.h
 
 FORMS += \
     client.ui
